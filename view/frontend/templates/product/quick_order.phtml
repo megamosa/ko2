@@ -1,0 +1,840 @@
+<?php
+/**
+ * MagoArab_EasYorder Professional Quick Order Template - FIXED VERSION
+ *
+ * @category    MagoArab
+ * @package     MagoArab_EasYorder
+ * @author      MagoArab Development Team
+ * @copyright   Copyright (c) 2025 MagoArab
+ * @license     https://opensource.org/licenses/MIT MIT License
+ */
+
+/* @var $block \MagoArab\EasYorder\Block\Product\QuickOrder */
+
+if (!$block->canShowQuickOrder()) {
+    return;
+}
+
+$product = $block->getCurrentProduct();
+if (!$product) {
+    return;
+}
+?>
+
+<div class="magoarab-easyorder-container" id="magoarab-easyorder-form-container">
+    <div class="easyorder-header">
+        <h3 class="easyorder-title"><?= $block->escapeHtml($block->getFormTitle()) ?></h3>
+        <p class="easyorder-subtitle"><?= __('Quick Order Process') ?></p>
+    </div>
+
+    <form id="magoarab-easyorder-form" method="post" novalidate="novalidate">
+        <input type="hidden" name="form_key" value="<?= $block->escapeHtmlAttr($block->getFormKey()) ?>">
+        <input type="hidden" name="product_id" value="<?= $block->escapeHtmlAttr($product->getId()) ?>">
+
+        <div class="easyorder-form-content">
+            <!-- Product Info Section -->
+            <div class="easyorder-product-info">
+                <div class="product-summary">
+                    <span class="product-name"><?= $block->escapeHtml($product->getName()) ?></span>
+                    <span class="product-price" id="magoarab-unit-price" data-price="<?= $block->getCurrentProductPrice() ?>"><?= $block->getCurrentProductFormattedPrice() ?></span>
+                </div>
+                
+                <!-- Product Options Section -->
+                <?php if ($product->getTypeId() === 'configurable'): ?>
+                <div class="easyorder-product-options" id="magoarab-product-options">
+                    <h4 class="section-title"><?= __('Product Options') ?></h4>
+                    <div class="product-options-container">
+                        <?= $block->getProductOptionsHtml() ?>
+                    </div>
+                </div>
+                <?php endif; ?>
+            </div>
+
+            <!-- Customer Information -->
+            <div class="easyorder-section">
+                <h4 class="section-title"><?= __('Customer Information') ?></h4>
+                <div class="field-group">
+                    <div class="field required">
+                        <label for="magoarab-customer-name" class="label">
+                            <span><?= __('Full Name') ?></span>
+                        </label>
+                        <div class="control">
+                            <input type="text" 
+                                   id="magoarab-customer-name" 
+                                   name="customer_name" 
+                                   class="input-text required-entry" 
+                                   placeholder="<?= $block->escapeHtmlAttr(__('Enter your full name')) ?>"
+                                   required>
+                        </div>
+                    </div>
+                    
+                    <div class="field required">
+                        <label for="magoarab-customer-phone" class="label">
+                            <span><?= __('Phone Number') ?></span>
+                        </label>
+                        <div class="control">
+                            <input type="tel" 
+                                   id="magoarab-customer-phone" 
+                                   name="customer_phone" 
+                                   class="input-text required-entry" 
+                                   placeholder="<?= $block->escapeHtmlAttr(__('Enter your phone number')) ?>"
+                                   required>
+                        </div>
+                    </div>
+
+                    <div class="field<?= $block->isEmailRequired() ? ' required' : '' ?>">
+                        <label for="magoarab-customer-email" class="label">
+                            <span><?= $block->isEmailRequired() ? __('Email Address') : __('Email Address (Optional)') ?></span>
+                        </label>
+                        <div class="control">
+                            <input type="email" 
+                                   id="magoarab-customer-email" 
+                                   name="customer_email" 
+                                   class="input-text<?= $block->isEmailRequired() ? ' required-entry' : '' ?>" 
+                                   placeholder="<?= $block->escapeHtmlAttr(__('Enter your email address')) ?>"
+                                   <?= $block->isEmailRequired() ? 'required' : '' ?>>
+                            <?php if ($block->getHelperData()->isAutoGenerateEmailEnabled()): ?>
+                                <small class="note"><?= __('Email will be auto-generated from phone if not provided') ?></small>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Address Information -->
+            <div class="easyorder-section">
+                <h4 class="section-title"><?= __('Delivery Information') ?></h4>
+                <div class="field-group">
+                    <!-- Country -->
+                    <div class="field required">
+                        <label for="magoarab-country-id" class="label">
+                            <span><?= __('Country') ?></span>
+                        </label>
+                        <div class="control">
+                            <select id="magoarab-country-id" name="country_id" class="select required-entry" required>
+                                <option value=""><?= __('Select Country') ?></option>
+                                <?php foreach ($block->getCountries() as $country): ?>
+                                    <option value="<?= $block->escapeHtmlAttr($country['value']) ?>"
+                                            <?= $country['value'] === $block->getDefaultCountry() ? 'selected' : '' ?>>
+                                        <?= $block->escapeHtml($country['label']) ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Region/State -->
+                    <div class="field<?= $block->isRegionRequired() ? ' required' : '' ?>">
+                        <label for="magoarab-region-id" class="label">
+                            <span><?= __('State/Province') ?></span>
+                        </label>
+                        <div class="control">
+                            <select id="magoarab-region-id" name="region_id" class="select" style="display: none;">
+                                <option value=""><?= __('Select State/Province') ?></option>
+                            </select>
+                            <input type="text" 
+                                   id="magoarab-region" 
+                                   name="region" 
+                                   class="input-text" 
+                                   placeholder="<?= $block->escapeHtmlAttr(__('Enter state/province')) ?>"
+                                   style="display: none;">
+                        </div>
+                    </div>
+
+                    <!-- City -->
+                    <div class="field required">
+                        <label for="magoarab-city" class="label">
+                            <span><?= __('City') ?></span>
+                        </label>
+                        <div class="control">
+                            <input type="text" 
+                                   id="magoarab-city" 
+                                   name="city" 
+                                   class="input-text required-entry" 
+                                   placeholder="<?= $block->escapeHtmlAttr(__('Enter city name')) ?>"
+                                   required>
+                        </div>
+                    </div>
+
+                    <!-- Street Address -->
+                    <div class="field required">
+                        <label for="magoarab-street-1" class="label">
+                            <span><?= __('Street Address - Line 1') ?></span>
+                        </label>
+                        <div class="control">
+                            <input type="text" 
+                                   id="magoarab-street-1" 
+                                   name="street[]" 
+                                   class="input-text required-entry" 
+                                   placeholder="<?= $block->escapeHtmlAttr(__('Building number, street name')) ?>"
+                                   required>
+                        </div>
+                    </div>
+
+                    <!-- Street Address Line 2 -->
+                    <?php if ($block->showStreet2()): ?>
+                    <div class="field">
+                        <label for="magoarab-street-2" class="label">
+                            <span><?= __('Street Address - Line 2 (Optional)') ?></span>
+                        </label>
+                        <div class="control">
+                            <input type="text" 
+                                   id="magoarab-street-2" 
+                                   name="street[]" 
+                                   class="input-text" 
+                                   placeholder="<?= $block->escapeHtmlAttr(__('Apartment, floor, additional info')) ?>">
+                        </div>
+                    </div>
+                    <?php endif; ?>
+
+                    <!-- Postcode -->
+                    <div class="field" id="magoarab-postcode-field">
+                        <label for="magoarab-postcode" class="label">
+                            <span><?= __('Postal Code') ?></span>
+                        </label>
+                        <div class="control">
+                            <input type="text" 
+                                   id="magoarab-postcode" 
+                                   name="postcode" 
+                                   class="input-text" 
+                                   placeholder="<?= $block->escapeHtmlAttr(__('Enter postal code')) ?>">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quantity Section -->
+            <div class="field required">
+                <label for="magoarab-easyorder-qty" class="label">
+                    <span><?= __('Quantity') ?></span>
+                </label>
+                <div class="control">
+                    <div class="qty-container">
+                        <button type="button" class="qty-btn minus" data-action="minus">−</button>
+                        <input type="number" 
+                               id="magoarab-easyorder-qty" 
+                               name="qty" 
+                               value="1" 
+                               min="1" 
+                               class="qty-input required-entry" 
+                               required>
+                        <button type="button" class="qty-btn plus" data-action="plus">+</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Shipping Methods -->
+            <div class="easyorder-section" id="magoarab-shipping-section" style="display: none;">
+                <h4 class="section-title"><?= __('Shipping Method') ?></h4>
+                <div class="field-group">
+                    <div class="field required">
+                        <div class="control">
+                            <div id="magoarab-shipping-methods-container">
+                                <div class="loading-message"><?= __('Loading shipping methods...') ?></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment Methods -->
+            <div class="easyorder-section">
+                <h4 class="section-title"><?= __('Payment Method') ?></h4>
+                <div class="field-group">
+                    <div class="field required">
+                        <div class="control">
+                            <div class="payment-methods" id="magoarab-payment-methods">
+                                <?php $paymentMethods = $block->getAvailablePaymentMethods(); ?>
+                                <?php if (!empty($paymentMethods)): ?>
+                                    <?php foreach ($paymentMethods as $index => $method): ?>
+                                        <?php 
+                                        $defaultMethod = $block->getDefaultPaymentMethod();
+                                        $isDefault = ($defaultMethod && $method['code'] === $defaultMethod) || 
+                                                   (!$defaultMethod && $index === 0);
+                                        ?>
+                                        <label class="payment-method">
+                                            <input type="radio" 
+                                                   name="payment_method" 
+                                                   value="<?= $block->escapeHtmlAttr($method['code']) ?>" 
+                                                   class="payment-radio"
+                                                   <?= $isDefault ? 'checked' : '' ?>>
+                                            <span class="payment-label">
+                                                <?= $block->escapeHtml($method['title']) ?>
+                                            </span>
+                                        </label>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
+                                    <div class="no-payment-methods">
+                                        <p><?= __('No payment methods available currently') ?></p>
+                                        <small><?= __('Please check payment method settings in admin panel') ?></small>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order Summary -->
+            <div class="easyorder-section" id="magoarab-order-summary-section">
+                <h4 class="section-title"><?= __('Order Summary') ?></h4>
+                <div class="order-summary">
+                    <div class="summary-row">
+                        <span class="label"><?= __('Unit Price:') ?></span>
+                        <span class="value" id="magoarab-unit-price-display"><?= $block->getCurrentProductFormattedPrice() ?></span>
+                    </div>
+                    <div class="summary-row">
+                        <span class="label"><?= __('Quantity:') ?></span>
+                        <span class="value" id="magoarab-qty-display">1</span>
+                    </div>
+                    <div class="summary-row">
+                        <span class="label"><?= __('Subtotal:') ?></span>
+                        <span class="value" id="magoarab-product-subtotal"><?= $block->getCurrentProductFormattedPrice() ?></span>
+                    </div>
+                    <div class="summary-row" id="magoarab-shipping-cost-row" style="display: none;">
+                        <span class="label"><?= __('Shipping Cost:') ?></span>
+                        <span class="value" id="magoarab-shipping-cost">-</span>
+                    </div>
+                    <div class="summary-row total-row">
+                        <span class="label"><?= __('Final Total:') ?></span>
+                        <span class="value" id="magoarab-order-total"><?= $block->getCurrentProductFormattedPrice() ?></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="easyorder-actions">
+                <button type="submit" 
+                        class="easyorder-submit" 
+                        id="magoarab-easyorder-submit-btn"
+                        disabled>
+                    <span><?= __('Click Here to Order') ?></span>
+                </button>
+                <div class="loading-overlay" id="magoarab-loading-overlay" style="display: none;">
+                    <div class="loader"></div>
+                    <span><?= __('Creating order...') ?></span>
+                </div>
+            </div>
+
+            <!-- Success Message -->
+            <div id="magoarab-success-message" class="message success" style="display: none;">
+                <div class="message-content">
+                    <strong><?= __('Order created successfully!') ?></strong>
+                    <p id="magoarab-success-text"></p>
+                    <p class="order-info">
+                        <?= __('Order Number:') ?> <span id="magoarab-order-number"></span>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Error Message -->
+            <div id="magoarab-error-message" class="message error" style="display: none;">
+                <div class="message-content">
+                    <strong><?= __('An error occurred') ?></strong>
+                    <p id="magoarab-error-text"></p>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+require(['jquery', 'mage/url', 'domReady!'], function($, url) {
+    var config = <?= $block->getJsonConfig() ?>;
+    var form = $('#magoarab-easyorder-form');
+    var submitBtn = $('#magoarab-easyorder-submit-btn');
+    var loadingOverlay = $('#magoarab-loading-overlay');
+    
+    // Initialize form handlers
+    initializeFormHandlers();
+    
+    function initializeFormHandlers() {
+        // Quantity controls
+        $('.magoarab-easyorder-container .qty-btn').on('click', function() {
+            var action = $(this).data('action');
+            var qtyInput = $('#magoarab-easyorder-qty');
+            var currentQty = parseInt(qtyInput.val()) || 1;
+            
+            if (action === 'plus') {
+                qtyInput.val(currentQty + 1);
+            } else if (action === 'minus' && currentQty > 1) {
+                qtyInput.val(currentQty - 1);
+            }
+            
+            updateOrderSummary();
+            updateCalculation();
+        });
+        
+        // Quantity input change
+        $('#magoarab-easyorder-qty').on('change keyup', function() {
+            var qty = parseInt($(this).val()) || 1;
+            if (qty < 1) {
+                $(this).val(1);
+                qty = 1;
+            }
+            updateOrderSummary();
+            updateCalculation();
+        });
+        
+        // Country change handler - FIXED
+        $('#magoarab-country-id').on('change', function() {
+            var countryId = $(this).val();
+            console.log('Country changed to:', countryId);
+            loadRegions(countryId);
+            togglePostcodeField(countryId);
+            
+            // Load shipping methods if we have enough data
+            if (countryId && $('#magoarab-city').val()) {
+                loadShippingMethods();
+            }
+        });
+        
+        // Region change
+        $('#magoarab-region-id, #magoarab-region').on('change', function() {
+            console.log('Region changed');
+            if ($('#magoarab-country-id').val() && $('#magoarab-city').val()) {
+                loadShippingMethods();
+            }
+        });
+        
+        // Address field changes
+        $('#magoarab-city, #magoarab-street-1, #magoarab-street-2, #magoarab-postcode').on('change', function() {
+            console.log('Address field changed');
+            if ($('#magoarab-country-id').val() && $('#magoarab-city').val()) {
+                loadShippingMethods();
+            }
+        });
+        
+        // Payment method change
+        $('input[name="payment_method"]').on('change', function() {
+            checkFormValidity();
+        });
+        
+        // Shipping method change
+        $(document).on('change', 'input[name="shipping_method"]', function() {
+            var cost = $(this).data('cost') || 0;
+            $('#magoarab-shipping-cost').text(formatPrice(cost)).data('cost', cost);
+            $('#magoarab-shipping-cost-row').show();
+            updateFinalTotal();
+            checkFormValidity();
+        });
+        
+        // Form validation
+        form.find('input[required], select[required], textarea[required]').on('change blur', function() {
+            checkFormValidity();
+        });
+        
+        // Form submission
+        form.on('submit', function(e) {
+            e.preventDefault();
+            submitOrder();
+        });
+    }
+    
+    function loadRegions(countryId) {
+        console.log('Loading regions for country:', countryId);
+        
+        if (!countryId) {
+            $('#magoarab-region-id, #magoarab-region').hide();
+            return;
+        }
+        
+        var regionSelect = $('#magoarab-region-id');
+        var regionInput = $('#magoarab-region');
+        
+        // Show loading state
+        regionSelect.html('<option value="">Loading...</option>').show();
+        regionInput.hide();
+        
+        $.get(config.urls.regions, {
+            country_id: countryId
+        })
+        .done(function(response) {
+            console.log('Regions response:', response);
+            
+            regionSelect.empty().append('<option value="">' + 'Select State/Province' + '</option>');
+            
+            if (response.success && response.regions && response.regions.length > 0) {
+                $.each(response.regions, function(index, region) {
+                    regionSelect.append('<option value="' + region.value + '">' + region.label + '</option>');
+                });
+                regionSelect.show();
+                regionInput.hide();
+                if (config.settings.requireRegion) {
+                    regionSelect.addClass('required-entry');
+                    regionInput.removeClass('required-entry');
+                }
+            } else {
+                regionSelect.hide();
+                regionInput.show();
+                if (config.settings.requireRegion) {
+                    regionInput.addClass('required-entry');
+                    regionSelect.removeClass('required-entry');
+                }
+            }
+        })
+        .fail(function(xhr, status, error) {
+            console.error('Failed to load regions:', error);
+            regionSelect.hide();
+            regionInput.show();
+            if (config.settings.requireRegion) {
+                regionInput.addClass('required-entry');
+            }
+        });
+    }
+    
+    function togglePostcodeField(countryId) {
+        var postcodeField = $('#magoarab-postcode-field');
+        var postcodeInput = $('#magoarab-postcode');
+        
+        if (config.settings.requirePostcode) {
+            postcodeField.addClass('required');
+            postcodeInput.addClass('required-entry');
+            postcodeField.find('.label span').text('Postal Code *');
+        } else {
+            postcodeField.removeClass('required');
+            postcodeInput.removeClass('required-entry');
+            postcodeField.find('.label span').text('Postal Code (Optional)');
+        }
+    }
+    
+    function loadShippingMethods() {
+        var countryId = $('#magoarab-country-id').val();
+        var regionId = $('#magoarab-region-id').val();
+        var region = $('#magoarab-region').val();
+        var postcode = $('#magoarab-postcode').val();
+        var city = $('#magoarab-city').val();
+        var phone = $('#magoarab-customer-phone').val();
+        
+        console.log('Loading shipping methods with data:', {
+            country_id: countryId,
+            region_id: regionId,
+            region: region,
+            city: city,
+            postcode: postcode,
+            phone: phone
+        });
+        
+        if (!countryId || !city) {
+            $('#magoarab-shipping-section').hide();
+            console.log('Missing required data for shipping calculation');
+            return;
+        }
+        
+        $('#magoarab-shipping-section').show();
+        $('#magoarab-shipping-methods-container').html('<div class="loading-message">Loading shipping methods...</div>');
+        
+        $.post({
+            url: config.urls.shipping,
+            data: {
+                product_id: config.productId,
+                country_id: countryId,
+                region_id: regionId,
+                region: region,
+                postcode: postcode,
+                city: city,
+                phone: phone,
+                qty: parseInt($('#magoarab-easyorder-qty').val()) || 1,
+                form_key: $('input[name="form_key"]').val()
+            },
+            timeout: 15000
+        })
+        .done(function(response) {
+            console.log('Shipping methods response:', response);
+            handleShippingResponse(response);
+        })
+        .fail(function(xhr, status, error) {
+            console.error('Shipping methods failed:', error);
+            var errorMsg = 'Error loading shipping methods';
+            if (status === 'timeout') {
+                errorMsg = 'Request timeout. Please try again';
+            }
+            $('#magoarab-shipping-methods-container').html('<div class="error-message">' + errorMsg + '</div>');
+        });
+    }
+
+    function handleShippingResponse(response) {
+        if (response.success && response.shipping_methods && response.shipping_methods.length > 0) {
+            var html = '<div class="shipping-methods-list">';
+            
+            response.shipping_methods.forEach(function(method, index) {
+                var isChecked = index === 0 ? 'checked' : '';
+                var priceFormatted = method.price_formatted || formatPrice(method.price);
+                html += `
+                    <label class="shipping-method-option">
+                        <input type="radio" 
+                               name="shipping_method" 
+                               value="${method.code}" 
+                               class="shipping-radio" 
+                               data-cost="${method.price}"
+                               ${isChecked}>
+                        <div class="method-info">
+                            <span class="method-title">${method.carrier_title || method.title}</span>
+                            <span class="method-description">${method.title}</span>
+                        </div>
+                        <span class="method-price">${priceFormatted}</span>
+                    </label>
+                `;
+            });
+            
+            html += '</div>';
+            $('#magoarab-shipping-methods-container').html(html);
+            
+            // Auto-select first method
+            $('input[name="shipping_method"]:first').trigger('change');
+            
+        } else {
+            var errorMsg = response.message || 'No shipping methods available for this location';
+            $('#magoarab-shipping-methods-container').html(`
+                <div class="no-shipping-methods">
+                    <p>${errorMsg}</p>
+                    <small>Please verify your address or check shipping settings in admin panel</small>
+                </div>
+            `);
+        }
+    }
+    
+    function updateOrderSummary() {
+        var qty = parseInt($('#magoarab-easyorder-qty').val()) || 1;
+        var unitPrice = parseFloat($('#magoarab-unit-price').data('price')) || 0;
+        var subtotal = qty * unitPrice;
+        
+        $('#magoarab-qty-display').text(qty);
+        $('#magoarab-product-subtotal').text(formatPrice(subtotal));
+        
+        updateFinalTotal();
+    }
+    
+    function updateFinalTotal() {
+        var qty = parseInt($('#magoarab-easyorder-qty').val()) || 1;
+        var unitPrice = parseFloat($('#magoarab-unit-price').data('price')) || 0;
+        var subtotal = qty * unitPrice;
+        var shippingCost = parseFloat($('#magoarab-shipping-cost').data('cost')) || 0;
+        var total = subtotal + shippingCost;
+        
+        $('#magoarab-order-total').text(formatPrice(total));
+    }
+    
+    function updateCalculation() {
+        var shippingMethod = $('input[name="shipping_method"]:checked').val();
+        if (!shippingMethod) return;
+        
+        $.post(config.urls.calculate, {
+            product_id: config.productId,
+            qty: parseInt($('#magoarab-easyorder-qty').val()) || 1,
+            shipping_method: shippingMethod,
+            country_id: $('#magoarab-country-id').val(),
+            region: $('#magoarab-region').val() || $('#magoarab-region-id').val(),
+            postcode: $('#magoarab-postcode').val(),
+            form_key: $('input[name="form_key"]').val()
+        })
+        .done(function(response) {
+            if (response.success && response.calculation) {
+                updateOrderSummaryWithCalculation(response.calculation);
+            }
+        })
+        .fail(function() {
+            console.log('Failed to calculate total');
+        });
+    }
+    
+    function updateOrderSummaryWithCalculation(calculation) {
+        $('#magoarab-unit-price-display').text(calculation.formatted.product_price);
+        $('#magoarab-product-subtotal').text(calculation.formatted.subtotal);
+        $('#magoarab-shipping-cost').text(calculation.formatted.shipping_cost).data('cost', calculation.shipping_cost);
+        $('#magoarab-order-total').text(calculation.formatted.total);
+        $('#magoarab-shipping-cost-row').show();
+    }
+    
+    function checkFormValidity() {
+        var isValid = true;
+        
+        // Check required fields
+        form.find('input[required], select[required], textarea[required]').each(function() {
+            if (!$(this).val().trim()) {
+                isValid = false;
+                return false;
+            }
+        });
+        
+        // Check shipping method selection
+        if (!$('input[name="shipping_method"]:checked').length) {
+            isValid = false;
+        }
+        
+        // Check payment method selection
+        if (!$('input[name="payment_method"]:checked').length) {
+            isValid = false;
+        }
+        
+        // Check product options only if they exist (for configurable products)
+        var productOptionsExist = $('.product-option-select').length > 0;
+        if (productOptionsExist) {
+            var allOptionsSelected = true;
+            $('.product-option-select').each(function() {
+                if (!$(this).val()) {
+                    allOptionsSelected = false;
+                    return false;
+                }
+            });
+            if (!allOptionsSelected) {
+                isValid = false;
+            }
+        }
+        
+        submitBtn.prop('disabled', !isValid);
+        return isValid;
+    }
+    
+    function submitOrder() {
+        if (!checkFormValidity()) {
+            showErrorMessage('Please fill all required fields');
+            return;
+        }
+        
+        var formData = form.serialize();
+        
+        // Add product options only if they exist
+        var productOptionsExist = $('.product-option-select').length > 0;
+        if (productOptionsExist) {
+            var productOptions = {};
+            $('.product-option-select').each(function() {
+                var attributeId = $(this).attr('name').match(/\[(\d+)\]/)[1];
+                var optionId = $(this).val();
+                if (optionId) {
+                    productOptions[attributeId] = optionId;
+                }
+            });
+            
+            if (Object.keys(productOptions).length > 0) {
+                formData += '&' + $.param({super_attribute: productOptions});
+            }
+        }
+        
+        submitBtn.prop('disabled', true);
+        submitBtn.text('Creating order...');
+        loadingOverlay.show();
+        hideMessages();
+        
+        $.ajax({
+            url: config.urls.submit,
+            type: 'POST',
+            data: formData,
+            timeout: 30000,
+            success: function(response) {
+                if (response.success) {
+                    showSuccessMessage(response.message || 'Order created successfully!');
+                    if (response.increment_id) {
+                        $('#magoarab-order-number').text(response.increment_id);
+                    }
+                    // Reset form
+                    form[0].reset();
+                    $('#magoarab-shipping-methods-container').html('<p>Loading shipping methods...</p>');
+                    updateOrderSummary();
+                } else {
+                    showErrorMessage(response.message || 'Error creating order');
+                }
+            },
+            error: function(xhr, status, error) {
+                var errorMessage = 'Connection error. Please try again.';
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    errorMessage = xhr.responseJSON.message;
+                } else if (xhr.status === 0) {
+                    errorMessage = 'No internet connection. Please check connection.';
+                } else if (xhr.status === 500) {
+                    errorMessage = 'Server error. Please try later.';
+                }
+                showErrorMessage(errorMessage);
+            },
+            complete: function() {
+                submitBtn.prop('disabled', false);
+                submitBtn.text('Click Here to Order');
+                loadingOverlay.hide();
+            }
+        });
+    }
+    
+    function showSuccessMessage(message, orderNumber) {
+        $('#magoarab-success-text').text(message);
+        if (orderNumber) {
+            $('#magoarab-order-number').text(orderNumber);
+        }
+        $('#magoarab-success-message').show();
+        $('html, body').animate({
+            scrollTop: $('#magoarab-success-message').offset().top - 50
+        }, 500);
+    }
+    
+    function showErrorMessage(message) {
+        $('#magoarab-error-text').text(message);
+        $('#magoarab-error-message').show();
+        $('html, body').animate({
+            scrollTop: $('#magoarab-error-message').offset().top - 50
+        }, 500);
+    
+        // Hide message automatically after 10 seconds
+        setTimeout(function() {
+            $('#magoarab-error-message').fadeOut();
+        }, 10000);
+    }
+    
+    function hideMessages() {
+        $('#magoarab-success-message, #magoarab-error-message').hide();
+    }
+    
+    function formatPrice(price) {
+        var currencySymbol = config.currency.symbol;
+        var precision = config.currency.precision || 2;
+        var formattedPrice = parseFloat(price).toFixed(precision);
+        return currencySymbol + formattedPrice;
+    }
+    
+    // Initialize on page load
+    checkFormValidity();
+    updateOrderSummary();
+    
+    // Auto-load regions and shipping if country is pre-selected
+    var initialCountry = $('#magoarab-country-id').val();
+    if (initialCountry) {
+        loadRegions(initialCountry);
+        togglePostcodeField(initialCountry);
+    }
+    
+    // Product options change handler
+    $(document).on('change', '.product-option-select', function() {
+        updateProductPrice();
+        checkFormValidity();
+    });
+    
+    function updateProductPrice() {
+        var selectedOptions = {};
+        $('.product-option-select').each(function() {
+            var attributeId = $(this).attr('name').match(/\[(\d+)\]/)[1];
+            var optionId = $(this).val();
+            if (optionId) {
+                selectedOptions[attributeId] = optionId;
+            }
+        });
+        
+        // Update price based on selected options
+        if (Object.keys(selectedOptions).length > 0) {
+            $.ajax({
+                url: config.urls.getPrice,
+                type: 'POST',
+                data: {
+                    product_id: config.productId,
+                    super_attribute: selectedOptions,
+                    form_key: $('input[name="form_key"]').val()
+                },
+                success: function(response) {
+                    if (response.success) {
+                        $('#magoarab-unit-price').attr('data-price', response.price).text(response.formatted_price);
+                        $('#magoarab-unit-price-display').text(response.formatted_price);
+                        updateOrderSummary();
+                    }
+                }
+            });
+        }
+    }
+});
+</script>

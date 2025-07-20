@@ -1,0 +1,46 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * MagoArab_EasYorder Professional Default Configuration
+ *
+ * @category    MagoArab
+ * @package     MagoArab_EasYorder
+ * @author      MagoArab Development Team
+ * @copyright   Copyright (c) 2025 MagoArab
+ * @license     https://opensource.org/licenses/MIT MIT License
+ */
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Store:etc/config.xsd">
+    <default>
+        <magoarab_easyorder>
+            <general>
+                <enabled>1</enabled>
+                <form_title>اطلب بسهولة ومن هنا</form_title>
+                <success_message>تم إنشاء طلبك بنجاح! سيتم التواصل معك قريباً.</success_message>
+                <send_email_notification>1</send_email_notification>
+                <default_customer_group>0</default_customer_group>
+                <form_position>after_review</form_position>
+                <auto_generate_email>1</auto_generate_email>
+                <email_domain>easypay.com</email_domain>
+                <phone_validation>1</phone_validation>
+            </general>
+            <form_fields>
+                <require_email>0</require_email>
+                <require_postcode>0</require_postcode>
+                <require_region>0</require_region>
+                <show_street_2>1</show_street_2>
+                <require_city>1</require_city>
+            </form_fields>
+            <shipping_payment>
+                <default_payment_method>cashondelivery</default_payment_method>
+                <fallback_shipping_price>25</fallback_shipping_price>
+            </shipping_payment>
+            <advanced>
+                <debug_mode>0</debug_mode>
+                <api_timeout>15</api_timeout>
+                <css_scope_validation>1</css_scope_validation>
+            </advanced>
+        </magoarab_easyorder>
+    </default>
+</config>
